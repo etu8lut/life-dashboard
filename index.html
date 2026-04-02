@@ -1,0 +1,1164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Life Dashboard — Etuate</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFBF8;
+    --card: #FFFFFF;
+    --lime: #CBFF4D;
+    --lime-soft: #E8FFB0;
+    --lime-text: #3D5A00;
+    --ink: #1B1E17;
+    --ink-2: #4A4D44;
+    --ink-3: #8A8D84;
+    --ink-4: #B8BAB2;
+    --rule: #E4E6DE;
+    --sky: #A8D5F2;
+    --sky-soft: #E6F3FC;
+    --sky-dark: #2A6A9E;
+    --warm: #F5F0E8;
+    --warm-2: #EDE7DC;
+    --success: #3D8B37;
+    --success-soft: #E6F4E5;
+    --amber: #B8860B;
+    --amber-soft: #FEF5E0;
+    --rose: #C9547A;
+    --rose-soft: #FCE8EF;
+    --radius: 14px;
+    --radius-sm: 10px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg); color: var(--ink);
+    min-height: 100vh; padding: 28px 32px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Topbar */
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 24px; border-bottom: 1px solid var(--ink);
+    margin-bottom: 28px; opacity: 0.92;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 12px; background: var(--lime);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--lime-text); font-weight: 700; font-size: 15px;
+  }
+  .greeting h1 { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
+  .greeting p { font-size: 12px; color: var(--ink-3); font-weight: 400; margin-top: 1px; }
+
+  .topbar-nav { display: flex; gap: 2px; }
+  .nav-btn {
+    padding: 8px 18px; border: none; background: transparent; border-radius: 8px;
+    font-size: 12px; font-family: inherit; font-weight: 500; color: var(--ink-3);
+    cursor: pointer; transition: all 0.2s; letter-spacing: 0.1px;
+  }
+  .nav-btn.active { background: var(--ink); color: var(--bg); }
+  .nav-btn:hover:not(.active) { color: var(--ink); background: var(--rule); }
+
+  .period-selector {
+    display: flex; align-items: center; gap: 8px;
+    border: 1px solid var(--rule); border-radius: 8px;
+    padding: 7px 14px; font-size: 12px; color: var(--ink-3);
+    cursor: pointer; font-family: inherit; font-weight: 500;
+    background: var(--card); transition: border-color 0.2s;
+  }
+  .period-selector:hover { border-color: var(--ink-4); }
+
+  /* Tab pages */
+  .tab-page { display: none; }
+  .tab-page.active { display: block; }
+
+  /* Shared card styles */
+  .card {
+    background: var(--card); border-radius: var(--radius); padding: 24px;
+    border: 1px solid var(--rule); transition: all 0.25s; position: relative;
+  }
+  .card:hover { border-color: var(--ink-4); }
+  .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+  .card-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1.2px; color: var(--ink-3); }
+  .card-badge { font-size: 10px; padding: 3px 10px; border-radius: 20px; font-weight: 600; letter-spacing: 0.2px; }
+  .badge-lime { background: var(--lime-soft); color: var(--lime-text); }
+  .badge-sky { background: var(--sky-soft); color: var(--sky-dark); }
+  .badge-warm { background: var(--warm); color: var(--amber); }
+  .badge-rose { background: var(--rose-soft); color: var(--rose); }
+  .badge-success { background: var(--success-soft); color: var(--success); }
+  .big-number { font-size: 34px; font-weight: 700; letter-spacing: -1.5px; line-height: 1; }
+  .big-number-sub { font-size: 12px; color: var(--ink-3); margin-top: 5px; font-weight: 400; }
+  .trend { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 6px; }
+  .trend-up { background: var(--success-soft); color: var(--success); }
+  .trend-down { background: var(--rose-soft); color: var(--rose); }
+
+  /* ============ OVERVIEW TAB ============ */
+  .overview-grid {
+    display: grid; grid-template-columns: 340px 1fr 1fr; gap: 18px;
+  }
+  .calendar-card { grid-row: 1 / 3; grid-column: 1; }
+
+  /* Calendar shared */
+  .cal-month-nav { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .cal-month { font-size: 15px; font-weight: 600; letter-spacing: -0.2px; }
+  .cal-nav-btn {
+    width: 28px; height: 28px; border-radius: 8px; border: 1px solid var(--rule);
+    background: transparent; cursor: pointer; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; color: var(--ink-3);
+    transition: all 0.15s; font-family: inherit;
+  }
+  .cal-nav-btn:hover { background: var(--bg); color: var(--ink); }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; text-align: center; }
+  .cal-day-header { font-size: 9px; font-weight: 600; color: var(--ink-4); text-transform: uppercase; padding: 6px 0; letter-spacing: 0.8px; }
+  .cal-day {
+    width: 100%; aspect-ratio: 1; display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 500; border-radius: 8px; cursor: pointer;
+    transition: all 0.15s; position: relative; color: var(--ink-2);
+  }
+  .cal-day:hover { background: var(--bg); }
+  .cal-day.today { background: var(--ink); color: white; font-weight: 700; }
+  .cal-day.has-event::after { content: ''; width: 4px; height: 4px; border-radius: 50%; background: var(--sky); position: absolute; bottom: 3px; }
+  .cal-day.travel-day { background: var(--lime-soft); color: var(--lime-text); font-weight: 600; }
+  .cal-day.empty { cursor: default; }
+  .cal-events { margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--rule); display: flex; flex-direction: column; gap: 6px; }
+  .cal-event {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: var(--radius-sm);
+    font-size: 12px; font-weight: 500; transition: all 0.2s; color: var(--ink-2); border: 1px solid transparent;
+  }
+  .cal-event:hover { background: var(--bg); border-color: var(--rule); }
+  .event-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .event-time { font-size: 10px; color: var(--ink-4); margin-left: auto; font-weight: 600; letter-spacing: 0.3px; }
+
+  /* Savings ring */
+  .savings-visual { margin: 16px 0; display: flex; justify-content: center; }
+  .savings-ring { width: 140px; height: 140px; position: relative; }
+  .savings-ring svg { transform: rotate(-90deg); }
+  .savings-ring-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); text-align: center; }
+  .savings-ring-pct { font-size: 28px; font-weight: 700; color: var(--lime-text); letter-spacing: -1px; }
+  .savings-ring-label { font-size: 10px; color: var(--ink-4); font-weight: 500; }
+  .savings-details { margin-top: 12px; }
+  .savings-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; font-size: 12px; }
+  .savings-row:not(:last-child) { border-bottom: 1px solid var(--rule); }
+  .savings-row-label { color: var(--ink-3); font-weight: 400; }
+  .savings-row-value { font-weight: 600; color: var(--ink); }
+
+  /* Income */
+  .income-sources { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+  .income-source {
+    display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--rule); transition: all 0.2s;
+  }
+  .income-source:hover { border-color: var(--ink-4); transform: translateX(3px); }
+  .income-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+  .income-info { flex: 1; }
+  .income-name { font-size: 12px; font-weight: 600; }
+  .income-freq { font-size: 10px; color: var(--ink-4); font-weight: 500; }
+  .income-amt { font-size: 16px; font-weight: 700; }
+
+  /* Spending */
+  .spending-bars { display: flex; flex-direction: column; gap: 14px; margin-top: 18px; }
+  .spend-row { display: flex; align-items: center; gap: 12px; }
+  .spend-cat { width: 80px; font-size: 11px; color: var(--ink-3); flex-shrink: 0; font-weight: 500; }
+  .spend-track { flex: 1; height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+  .spend-fill { height: 100%; border-radius: 3px; }
+  .spend-amt { width: 55px; text-align: right; font-size: 12px; font-weight: 600; }
+
+  /* Insights */
+  .insights-card { background: var(--warm); border-color: var(--warm-2); }
+  .insights-card:hover { border-color: var(--ink-4); }
+  .insight-item { padding: 12px 0; font-size: 12px; line-height: 1.65; color: var(--ink-2); font-weight: 400; }
+  .insight-item:not(:last-child) { border-bottom: 1px solid var(--warm-2); }
+  .insight-item strong { color: var(--lime-text); font-weight: 700; }
+
+  /* Travel card (dark, used in overview) */
+  .travel-card { grid-column: 1 / 4; background: var(--ink); color: white; border-color: var(--ink); }
+  .travel-card:hover { border-color: var(--ink-2); }
+  .travel-card .card-title { color: rgba(255,255,255,0.35); }
+  .travel-header-row { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 22px; }
+  .travel-trip-name { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-top: 4px; }
+  .travel-dates { font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 4px; font-weight: 400; }
+  .travel-countdown { text-align: right; }
+  .countdown-number { font-size: 46px; font-weight: 700; line-height: 1; color: var(--lime); }
+  .countdown-label { font-size: 10px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+  .travel-stops { display: flex; align-items: center; }
+  .travel-stop { flex: 1; text-align: center; padding: 14px 6px; border-radius: var(--radius-sm); transition: background 0.2s; }
+  .travel-stop:hover { background: rgba(255,255,255,0.05); }
+  .stop-emoji { font-size: 28px; margin-bottom: 6px; }
+  .stop-city { font-size: 13px; font-weight: 600; }
+  .stop-dates-sm { font-size: 10px; color: rgba(255,255,255,0.35); margin-top: 2px; font-weight: 400; }
+  .stop-connector { width: 32px; height: 1px; background: rgba(255,255,255,0.12); flex-shrink: 0; position: relative; }
+  .stop-connector::after { content: '✈'; position: absolute; top: -9px; left: 50%; transform: translateX(-50%); font-size: 12px; opacity: 0.2; }
+  .travel-budget-row { display: flex; gap: 12px; margin-top: 22px; padding-top: 18px; border-top: 1px solid rgba(255,255,255,0.08); }
+  .travel-budget-item { flex: 1; padding: 14px; border-radius: var(--radius-sm); background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+  .tbi-label { font-size: 10px; color: rgba(255,255,255,0.3); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; }
+  .tbi-value { font-size: 18px; font-weight: 700; margin-top: 5px; }
+
+  /* ============ FINANCES TAB ============ */
+  .finances-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 18px; }
+  .finances-grid .full-width { grid-column: 1 / -1; }
+  .finances-grid .span-2 { grid-column: span 2; }
+
+  .stat-row { display: flex; gap: 18px; margin-bottom: 18px; }
+  .stat-card { flex: 1; background: var(--card); border: 1px solid var(--rule); border-radius: var(--radius); padding: 20px; transition: border-color 0.2s; }
+  .stat-card:hover { border-color: var(--ink-4); }
+  .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: var(--ink-3); margin-bottom: 8px; }
+  .stat-value { font-size: 28px; font-weight: 700; letter-spacing: -1px; }
+  .stat-sub { font-size: 11px; color: var(--ink-3); margin-top: 4px; }
+
+  .sub-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .sub-item {
+    display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: var(--radius-sm);
+    border: 1px solid var(--rule); font-size: 12px; transition: all 0.2s;
+  }
+  .sub-item:hover { border-color: var(--ink-4); }
+  .sub-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .sub-info { flex: 1; }
+  .sub-name { font-weight: 600; font-size: 12px; }
+  .sub-cycle { font-size: 10px; color: var(--ink-4); }
+  .sub-price { font-weight: 700; font-size: 14px; }
+  .sub-due { font-size: 10px; color: var(--ink-4); text-align: right; }
+
+  .bill-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+  .bill-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 14px; border-radius: var(--radius-sm); border: 1px solid var(--rule);
+    font-size: 12px; transition: all 0.2s;
+  }
+  .bill-row:hover { border-color: var(--ink-4); }
+  .bill-row-left { display: flex; align-items: center; gap: 10px; }
+  .bill-status { width: 6px; height: 6px; border-radius: 50%; }
+  .bill-row-name { font-weight: 500; }
+  .bill-row-date { font-size: 10px; color: var(--ink-4); }
+  .bill-row-amt { font-weight: 700; }
+
+  /* ============ TRAVEL TAB ============ */
+  .travel-page-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .travel-page-grid .full-width { grid-column: 1 / -1; }
+
+  .checklist { display: flex; flex-direction: column; gap: 6px; margin-top: 14px; }
+  .check-item {
+    display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+    border-radius: var(--radius-sm); font-size: 12px; font-weight: 500;
+    color: var(--ink-2); border: 1px solid var(--rule); transition: all 0.15s;
+  }
+  .check-item:hover { border-color: var(--ink-4); }
+  .check-item.done { color: var(--ink-4); text-decoration: line-through; }
+  .check-box {
+    width: 16px; height: 16px; border-radius: 5px; border: 1.5px solid var(--rule);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    font-size: 10px; cursor: pointer;
+  }
+  .check-item.done .check-box { background: var(--lime); border-color: var(--lime); color: var(--lime-text); }
+
+  .city-card {
+    padding: 18px; border-radius: var(--radius-sm); border: 1px solid var(--rule);
+    transition: all 0.2s; margin-bottom: 10px;
+  }
+  .city-card:hover { border-color: var(--ink-4); }
+  .city-header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .city-emoji { font-size: 24px; }
+  .city-name { font-size: 14px; font-weight: 700; }
+  .city-dates { font-size: 10px; color: var(--ink-4); }
+  .city-detail { font-size: 11px; color: var(--ink-3); line-height: 1.6; }
+  .city-budget { display: inline-block; margin-top: 8px; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 6px; background: var(--lime-soft); color: var(--lime-text); }
+
+  /* ============ CALENDAR TAB ============ */
+  .calendar-page-grid { display: grid; grid-template-columns: 1fr 380px; gap: 18px; }
+
+  .cal-large .cal-grid { gap: 4px; }
+  .cal-large .cal-day { font-size: 14px; border-radius: 10px; }
+  .cal-large .cal-day-header { font-size: 11px; padding: 8px 0; }
+
+  .event-list { display: flex; flex-direction: column; gap: 8px; }
+  .event-card {
+    padding: 14px 16px; border-radius: var(--radius-sm); border: 1px solid var(--rule);
+    transition: all 0.2s;
+  }
+  .event-card:hover { border-color: var(--ink-4); }
+  .event-card-date { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink-4); margin-bottom: 4px; }
+  .event-card-title { font-size: 13px; font-weight: 600; }
+  .event-card-desc { font-size: 11px; color: var(--ink-3); margin-top: 2px; line-height: 1.5; }
+  .event-card-tag {
+    display: inline-block; margin-top: 6px; font-size: 9px; font-weight: 600;
+    padding: 2px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  /* Upload zone */
+  .upload-zone {
+    border: 2px dashed var(--rule); border-radius: var(--radius); padding: 32px;
+    text-align: center; cursor: pointer; transition: all 0.25s; margin-bottom: 20px;
+    background: var(--card); position: relative;
+  }
+  .upload-zone:hover, .upload-zone.dragover { border-color: var(--lime); background: rgba(203,255,77,0.04); }
+  .upload-zone.has-file { border-style: solid; border-color: var(--lime); background: var(--lime-soft); }
+  .upload-icon { font-size: 32px; margin-bottom: 8px; }
+  .upload-title { font-size: 14px; font-weight: 600; color: var(--ink); }
+  .upload-sub { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+  .upload-zone input[type="file"] { display: none; }
+  .upload-filename { font-size: 12px; font-weight: 600; color: var(--lime-text); margin-top: 6px; }
+
+  .upload-actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+  .btn {
+    padding: 10px 24px; border-radius: 8px; font-family: inherit; font-size: 12px;
+    font-weight: 600; cursor: pointer; transition: all 0.2s; border: none;
+  }
+  .btn-primary { background: var(--ink); color: var(--bg); }
+  .btn-primary:hover { opacity: 0.85; }
+  .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-ghost { background: transparent; border: 1px solid var(--rule); color: var(--ink-2); }
+  .btn-ghost:hover { border-color: var(--ink-4); }
+
+  /* AI Analysis panel */
+  .ai-panel { margin-bottom: 20px; display: none; }
+  .ai-panel.visible { display: block; }
+
+  .ai-panel .card { border-color: var(--lime); background: linear-gradient(135deg, rgba(203,255,77,0.04), rgba(168,213,242,0.04)); }
+
+  .ai-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+  .ai-avatar { width: 32px; height: 32px; border-radius: 10px; background: var(--lime); display: flex; align-items: center; justify-content: center; font-size: 16px; }
+  .ai-label { font-size: 13px; font-weight: 600; }
+  .ai-label span { font-weight: 400; color: var(--ink-3); }
+
+  .ai-loading { display: flex; align-items: center; gap: 10px; padding: 20px 0; }
+  .ai-spinner { width: 20px; height: 20px; border: 2px solid var(--rule); border-top-color: var(--lime-text); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .ai-loading-text { font-size: 12px; color: var(--ink-3); }
+
+  .ai-content { font-size: 13px; line-height: 1.7; color: var(--ink-2); }
+  .ai-content h3 { font-size: 13px; font-weight: 700; color: var(--ink); margin: 16px 0 6px; }
+  .ai-content h3:first-child { margin-top: 0; }
+  .ai-content p { margin-bottom: 8px; }
+  .ai-content strong { color: var(--lime-text); font-weight: 600; }
+  .ai-content ul { margin: 6px 0 10px 18px; }
+  .ai-content li { margin-bottom: 4px; }
+  .ai-content code { background: var(--rule); padding: 1px 5px; border-radius: 4px; font-size: 11px; }
+
+  .ai-txn-summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--rule); }
+  .ai-txn-stat { text-align: center; }
+  .ai-txn-stat-value { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; }
+  .ai-txn-stat-label { font-size: 10px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-top: 2px; }
+
+  /* ============ TASKS TAB ============ */
+  .tasks-layout { display: grid; grid-template-columns: 280px 1fr; gap: 18px; }
+
+  .task-categories { display: flex; flex-direction: column; gap: 6px; }
+  .cat-btn {
+    display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+    border-radius: var(--radius-sm); border: 1px solid transparent;
+    background: transparent; font-family: inherit; font-size: 12px;
+    font-weight: 500; color: var(--ink-2); cursor: pointer; transition: all 0.15s;
+    text-align: left; width: 100%;
+  }
+  .cat-btn:hover { background: var(--bg); border-color: var(--rule); }
+  .cat-btn.active { background: var(--card); border-color: var(--rule); font-weight: 600; color: var(--ink); }
+  .cat-dot { width: 8px; height: 8px; border-radius: 4px; flex-shrink: 0; }
+  .cat-count { margin-left: auto; font-size: 10px; font-weight: 600; color: var(--ink-4); background: var(--bg); padding: 1px 7px; border-radius: 10px; }
+
+  .task-add-bar {
+    display: flex; gap: 8px; margin-bottom: 18px;
+  }
+  .task-input {
+    flex: 1; padding: 10px 14px; border: 1px solid var(--rule); border-radius: 8px;
+    font-family: inherit; font-size: 13px; background: var(--card); color: var(--ink);
+    outline: none; transition: border-color 0.2s;
+  }
+  .task-input:focus { border-color: var(--ink-4); }
+  .task-input::placeholder { color: var(--ink-4); }
+
+  .cat-select {
+    padding: 10px 12px; border: 1px solid var(--rule); border-radius: 8px;
+    font-family: inherit; font-size: 12px; background: var(--card); color: var(--ink-2);
+    cursor: pointer; outline: none; min-width: 130px;
+    -webkit-appearance: none; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238A8D84' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 12px center;
+    padding-right: 30px;
+  }
+
+  .task-list { display: flex; flex-direction: column; gap: 4px; }
+
+  .task-item {
+    display: flex; align-items: center; gap: 12px; padding: 13px 16px;
+    border-radius: var(--radius-sm); border: 1px solid var(--rule);
+    background: var(--card); transition: all 0.2s; position: relative;
+  }
+  .task-item:hover { border-color: var(--ink-4); }
+  .task-item.completed { opacity: 0.5; }
+  .task-item.completed .task-text { text-decoration: line-through; color: var(--ink-4); }
+
+  .task-check {
+    width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--rule);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; flex-shrink: 0; transition: all 0.15s; font-size: 11px;
+    background: transparent; font-family: inherit; color: transparent;
+  }
+  .task-check:hover { border-color: var(--ink-4); }
+  .task-item.completed .task-check { background: var(--lime); border-color: var(--lime); color: var(--lime-text); }
+
+  .task-text { flex: 1; font-size: 13px; font-weight: 500; color: var(--ink); }
+
+  .task-cat-tag {
+    font-size: 9px; font-weight: 600; padding: 3px 8px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.5px; flex-shrink: 0;
+  }
+
+  .task-delete {
+    width: 24px; height: 24px; border: none; background: transparent;
+    color: var(--ink-4); cursor: pointer; font-size: 14px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: all 0.15s; font-family: inherit;
+  }
+  .task-item:hover .task-delete { opacity: 1; }
+  .task-delete:hover { background: var(--rose-soft); color: var(--rose); }
+
+  .task-empty {
+    text-align: center; padding: 48px 20px; color: var(--ink-4); font-size: 13px;
+  }
+  .task-empty-icon { font-size: 36px; margin-bottom: 10px; }
+
+  .task-progress { margin-bottom: 18px; }
+  .task-progress-bar { height: 6px; background: var(--bg); border-radius: 3px; overflow: hidden; margin-top: 8px; }
+  .task-progress-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg, #CBFF4D, #A8D5F2); transition: width 0.4s ease; }
+  .task-progress-text { font-size: 11px; color: var(--ink-3); font-weight: 500; }
+
+  /* Animations */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+  .card, .stat-card { animation: fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) both; }
+
+  @media (max-width: 1000px) {
+    .overview-grid { grid-template-columns: 1fr 1fr; }
+    .calendar-card { grid-row: auto; grid-column: 1 / -1; }
+    .travel-card { grid-column: 1 / -1; }
+    .finances-grid { grid-template-columns: 1fr 1fr; }
+    .finances-grid .span-2 { grid-column: 1 / -1; }
+    .calendar-page-grid { grid-template-columns: 1fr; }
+    .travel-page-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .overview-grid, .finances-grid { grid-template-columns: 1fr; }
+    .travel-card { grid-column: auto; }
+    .topbar { flex-direction: column; align-items: flex-start; gap: 12px; }
+    body { padding: 16px; }
+    .stat-row { flex-direction: column; }
+    .travel-budget-row { flex-wrap: wrap; }
+    .travel-budget-item { min-width: calc(50% - 6px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <div class="avatar">E</div>
+    <div class="greeting">
+      <h1>Good morning, Etuate</h1>
+      <p>Wednesday, 2 April 2026 — Brisbane</p>
+    </div>
+  </div>
+  <div class="topbar-nav">
+    <button class="nav-btn active" onclick="switchTab('overview')">Overview</button>
+    <button class="nav-btn" onclick="switchTab('finances')">Finances</button>
+    <button class="nav-btn" onclick="switchTab('travel')">Travel</button>
+    <button class="nav-btn" onclick="switchTab('calendar')">Calendar</button>
+    <button class="nav-btn" onclick="switchTab('tasks')">Tasks</button>
+  </div>
+  <div class="period-selector">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    April 2026
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+</div>
+
+<!-- ==================== OVERVIEW ==================== -->
+<div class="tab-page active" id="tab-overview">
+  <div class="overview-grid">
+    <div class="card calendar-card">
+      <div class="card-header"><span class="card-title">Calendar</span></div>
+      <div class="cal-month-nav">
+        <button class="cal-nav-btn">‹</button>
+        <span class="cal-month">April 2026</span>
+        <button class="cal-nav-btn">›</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-day-header">Mo</div><div class="cal-day-header">Tu</div><div class="cal-day-header">We</div><div class="cal-day-header">Th</div><div class="cal-day-header">Fr</div><div class="cal-day-header">Sa</div><div class="cal-day-header">Su</div>
+        <div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day has-event">1</div><div class="cal-day today">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div>
+        <div class="cal-day">6</div><div class="cal-day has-event">7</div><div class="cal-day">8</div><div class="cal-day">9</div><div class="cal-day">10</div><div class="cal-day">11</div><div class="cal-day">12</div>
+        <div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day has-event">15</div><div class="cal-day">16</div><div class="cal-day">17</div><div class="cal-day">18</div><div class="cal-day">19</div>
+        <div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day">22</div><div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day travel-day">25</div><div class="cal-day travel-day">26</div>
+        <div class="cal-day travel-day">27</div><div class="cal-day travel-day">28</div><div class="cal-day travel-day">29</div><div class="cal-day travel-day">30</div><div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div>
+      </div>
+      <div class="cal-events">
+        <div class="cal-event"><div class="event-dot" style="background:var(--success)"></div>Eye test appointment<span class="event-time">1 Apr</span></div>
+        <div class="cal-event"><div class="event-dot" style="background:var(--sky-dark)"></div>Rent due<span class="event-time">7 Apr</span></div>
+        <div class="cal-event"><div class="event-dot" style="background:var(--rose)"></div>Scout demo — Remy @ BGM<span class="event-time">15 Apr</span></div>
+        <div class="cal-event"><div class="event-dot" style="background:var(--amber)"></div>✈ Fly Brisbane → Osaka<span class="event-time">25 Apr</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">First Home Savings</span><span class="card-badge badge-lime">On track</span></div>
+      <div class="savings-visual">
+        <div class="savings-ring">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r="58" fill="none" stroke="var(--rule)" stroke-width="8"/>
+            <circle cx="70" cy="70" r="58" fill="none" stroke="url(#savGrad)" stroke-width="8" stroke-linecap="round" stroke-dasharray="135 230"/>
+            <defs><linearGradient id="savGrad" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#CBFF4D"/><stop offset="100%" stop-color="#A8D5F2"/></linearGradient></defs>
+          </svg>
+          <div class="savings-ring-center"><div class="savings-ring-pct">37%</div><div class="savings-ring-label">of goal</div></div>
+        </div>
+      </div>
+      <div class="savings-details">
+        <div class="savings-row"><span class="savings-row-label">Saved so far</span><span class="savings-row-value" style="color:var(--lime-text)">$29,600</span></div>
+        <div class="savings-row"><span class="savings-row-label">Target deposit</span><span class="savings-row-value">$80,000</span></div>
+        <div class="savings-row"><span class="savings-row-label">Monthly contribution</span><span class="savings-row-value">$2,200</span></div>
+        <div class="savings-row"><span class="savings-row-label">Est. completion</span><span class="savings-row-value">Mar 2028</span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Income This Month</span><span class="trend trend-up">↑ 12%</span></div>
+      <div class="big-number">$6,840</div>
+      <div class="big-number-sub">Combined income — April</div>
+      <div class="income-sources">
+        <div class="income-source"><div class="income-icon" style="background:var(--lime-soft)">🎭</div><div class="income-info"><div class="income-name">Hamilton — MCG</div><div class="income-freq">Weekly call</div></div><div class="income-amt">$4,200</div></div>
+        <div class="income-source"><div class="income-icon" style="background:var(--sky-soft)">💻</div><div class="income-info"><div class="income-name">Castmates</div><div class="income-freq">Platform revenue</div></div><div class="income-amt">$1,840</div></div>
+        <div class="income-source"><div class="income-icon" style="background:var(--warm)">🎤</div><div class="income-info"><div class="income-name">Workshop — Canon Dance</div><div class="income-freq">One-off</div></div><div class="income-amt">$800</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="grid-column: 2 / 3;">
+      <div class="card-header"><span class="card-title">Spending Categories</span><span class="card-badge badge-sky">April so far</span></div>
+      <div class="big-number">$1,247</div>
+      <div class="big-number-sub">Discretionary spend — 2 days in</div>
+      <div class="spending-bars">
+        <div class="spend-row"><span class="spend-cat">Food & Dining</span><div class="spend-track"><div class="spend-fill" style="width:62%; background:linear-gradient(90deg, #CBFF4D, #A8D5F2)"></div></div><span class="spend-amt">$520</span></div>
+        <div class="spend-row"><span class="spend-cat">Transport</span><div class="spend-track"><div class="spend-fill" style="width:35%; background:linear-gradient(90deg, #A8D5F2, #7BB8E0)"></div></div><span class="spend-amt">$294</span></div>
+        <div class="spend-row"><span class="spend-cat">Shopping</span><div class="spend-track"><div class="spend-fill" style="width:28%; background:linear-gradient(90deg, #E8FFB0, #CBFF4D)"></div></div><span class="spend-amt">$233</span></div>
+        <div class="spend-row"><span class="spend-cat">Health</span><div class="spend-track"><div class="spend-fill" style="width:15%; background:linear-gradient(90deg, #F5F0E8, #B8860B)"></div></div><span class="spend-amt">$120</span></div>
+        <div class="spend-row"><span class="spend-cat">Entertainment</span><div class="spend-track"><div class="spend-fill" style="width:10%; background:linear-gradient(90deg, #FCE8EF, #C9547A)"></div></div><span class="spend-amt">$80</span></div>
+      </div>
+    </div>
+
+    <div class="card insights-card" style="grid-column: 3;">
+      <div class="card-header"><span class="card-title">💡 Insights</span></div>
+      <div class="insight-item">Your subscriptions went up <strong>$64</strong> since February. Claude Max 5x is the biggest at $200/mo — worth auditing the rest.</div>
+      <div class="insight-item">At your current savings rate, you'll hit your <strong>$80k deposit</strong> goal by March 2028. Adding $300/mo would bring it to Nov 2027.</div>
+      <div class="insight-item"><strong>23 days</strong> until Japan. Contacts & glasses shopping in Vietnam will save you ~$400 vs buying in Aus.</div>
+    </div>
+
+    <div class="card travel-card">
+      <div class="card-header"><span class="card-title">Upcoming Trip</span></div>
+      <div class="travel-header-row">
+        <div><div class="travel-trip-name">Japan & Vietnam 2026</div><div class="travel-dates">25 April — 28 May · 34 days</div></div>
+        <div class="travel-countdown"><div class="countdown-number">23</div><div class="countdown-label">Days to go</div></div>
+      </div>
+      <div class="travel-stops">
+        <div class="travel-stop"><div class="stop-emoji">🏯</div><div class="stop-city">Osaka</div><div class="stop-dates-sm">25 Apr – 2 May</div></div>
+        <div class="stop-connector"></div>
+        <div class="travel-stop"><div class="stop-emoji">🗼</div><div class="stop-city">Tokyo</div><div class="stop-dates-sm">2 – 10 May</div></div>
+        <div class="stop-connector"></div>
+        <div class="travel-stop"><div class="stop-emoji">🌿</div><div class="stop-city">Hanoi</div><div class="stop-dates-sm">11 – 17 May</div></div>
+        <div class="stop-connector"></div>
+        <div class="travel-stop"><div class="stop-emoji">🏮</div><div class="stop-city">Hoi An</div><div class="stop-dates-sm">17 – 22 May</div></div>
+        <div class="stop-connector"></div>
+        <div class="travel-stop"><div class="stop-emoji">🌴</div><div class="stop-city">Ho Chi Minh</div><div class="stop-dates-sm">22 – 28 May</div></div>
+      </div>
+      <div class="travel-budget-row">
+        <div class="travel-budget-item"><div class="tbi-label">Total Budget</div><div class="tbi-value">$8,500</div></div>
+        <div class="travel-budget-item"><div class="tbi-label">Flights Booked</div><div class="tbi-value" style="color:var(--lime)">$1,840</div></div>
+        <div class="travel-budget-item"><div class="tbi-label">Accommodation</div><div class="tbi-value">$2,100</div></div>
+        <div class="travel-budget-item"><div class="tbi-label">Remaining</div><div class="tbi-value" style="color:var(--lime)">$4,560</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== FINANCES ==================== -->
+<div class="tab-page" id="tab-finances">
+
+  <!-- CSV Upload Zone -->
+  <div class="upload-zone" id="uploadZone" onclick="document.getElementById('csvInput').click()">
+    <input type="file" id="csvInput" accept=".csv" onchange="handleFileSelect(event)">
+    <div id="uploadContent">
+      <div class="upload-icon">📄</div>
+      <div class="upload-title">Drop your bank statement CSV here</div>
+      <div class="upload-sub">or click to browse · Works with CommBank, NAB, ANZ, Westpac, Up, ING & more</div>
+    </div>
+  </div>
+
+  <!-- AI Analysis Panel -->
+  <div class="ai-panel" id="aiPanel">
+    <div class="card">
+      <div class="ai-header">
+        <div class="ai-avatar">🤖</div>
+        <div class="ai-label">Claude's Analysis <span>· based on your statement</span></div>
+      </div>
+      <div id="aiLoading" class="ai-loading">
+        <div class="ai-spinner"></div>
+        <div class="ai-loading-text">Reading your transactions and crunching the numbers...</div>
+      </div>
+      <div id="aiStats" class="ai-txn-summary" style="display:none"></div>
+      <div id="aiContent" class="ai-content" style="display:none"></div>
+      <div class="upload-actions" style="margin-top:18px; justify-content:flex-start;" id="aiActions" style="display:none">
+        <button class="btn btn-ghost" onclick="resetUpload()">Upload different file</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-label">Net Income (April)</div>
+      <div class="stat-value">$6,840</div>
+      <div class="stat-sub"><span style="color:var(--success); font-weight:600">↑ $720</span> vs March</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Bills & Subs</div>
+      <div class="stat-value">$2,847</div>
+      <div class="stat-sub"><span style="color:var(--rose); font-weight:600">↑ $64</span> vs Feb</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Net Savings Rate</div>
+      <div class="stat-value" style="color:var(--lime-text)">32%</div>
+      <div class="stat-sub">$2,200/mo into home deposit</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Discretionary Left</div>
+      <div class="stat-value">$1,793</div>
+      <div class="stat-sub">After bills, subs & savings</div>
+    </div>
+  </div>
+
+  <div class="finances-grid">
+    <div class="card span-2">
+      <div class="card-header"><span class="card-title">Monthly Bills</span><span class="card-badge badge-sky">7 bills this month</span></div>
+      <div class="bill-list">
+        <div class="bill-row"><div class="bill-row-left"><div class="bill-status" style="background:var(--success)"></div><span class="bill-row-name">Rent</span><span class="bill-row-date">Due 7th · Paid</span></div><div class="bill-row-amt">$1,950</div></div>
+        <div class="bill-row"><div class="bill-row-left"><div class="bill-status" style="background:var(--amber)"></div><span class="bill-row-name">Electricity (AGL)</span><span class="bill-row-date">Due 12th · Upcoming</span></div><div class="bill-row-amt">$142</div></div>
+        <div class="bill-row"><div class="bill-row-left"><div class="bill-status" style="background:var(--amber)"></div><span class="bill-row-name">Internet (Aussie BB)</span><span class="bill-row-date">Due 15th · Upcoming</span></div><div class="bill-row-amt">$89</div></div>
+        <div class="bill-row"><div class="bill-row-left"><div class="bill-status" style="background:var(--amber)"></div><span class="bill-row-name">Phone (Telstra)</span><span class="bill-row-date">Due 18th · Upcoming</span></div><div class="bill-row-amt">$65</div></div>
+        <div class="bill-row"><div class="bill-row-left"><div class="bill-status" style="background:var(--ink-4)"></div><span class="bill-row-name">Contents Insurance</span><span class="bill-row-date">Due 25th</span></div><div class="bill-row-amt">$42</div></div>
+        <div class="bill-row"><div class="bill-row-left"><div class="bill-status" style="background:var(--ink-4)"></div><span class="bill-row-name">Health Insurance</span><span class="bill-row-date">Due 28th</span></div><div class="bill-row-amt">$168</div></div>
+        <div class="bill-row"><div class="bill-row-left"><div class="bill-status" style="background:var(--ink-4)"></div><span class="bill-row-name">Car Rego (quarterly)</span><span class="bill-row-date">Due 30th</span></div><div class="bill-row-amt">$196</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">First Home Savings</span><span class="card-badge badge-lime">On track</span></div>
+      <div class="savings-visual">
+        <div class="savings-ring">
+          <svg width="140" height="140" viewBox="0 0 140 140">
+            <circle cx="70" cy="70" r="58" fill="none" stroke="var(--rule)" stroke-width="8"/>
+            <circle cx="70" cy="70" r="58" fill="none" stroke="url(#savGrad2)" stroke-width="8" stroke-linecap="round" stroke-dasharray="135 230"/>
+            <defs><linearGradient id="savGrad2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#CBFF4D"/><stop offset="100%" stop-color="#A8D5F2"/></linearGradient></defs>
+          </svg>
+          <div class="savings-ring-center"><div class="savings-ring-pct">37%</div><div class="savings-ring-label">of goal</div></div>
+        </div>
+      </div>
+      <div class="savings-details">
+        <div class="savings-row"><span class="savings-row-label">Saved</span><span class="savings-row-value" style="color:var(--lime-text)">$29,600</span></div>
+        <div class="savings-row"><span class="savings-row-label">Target</span><span class="savings-row-value">$80,000</span></div>
+        <div class="savings-row"><span class="savings-row-label">Monthly</span><span class="savings-row-value">$2,200</span></div>
+        <div class="savings-row"><span class="savings-row-label">ETA</span><span class="savings-row-value">Mar 2028</span></div>
+      </div>
+    </div>
+
+    <div class="card span-2">
+      <div class="card-header"><span class="card-title">Active Subscriptions</span><span class="card-badge badge-rose">$487/mo total</span></div>
+      <div class="sub-list">
+        <div class="sub-item"><div class="sub-icon" style="background:var(--sky-soft)">🤖</div><div class="sub-info"><div class="sub-name">Claude Max 5x</div><div class="sub-cycle">Monthly · AI tools</div></div><div><div class="sub-price">$200</div><div class="sub-due">Renews 8 Apr</div></div></div>
+        <div class="sub-item"><div class="sub-icon" style="background:var(--warm)">🎵</div><div class="sub-info"><div class="sub-name">Spotify Premium Duo</div><div class="sub-cycle">Monthly · Music</div></div><div><div class="sub-price">$19.99</div><div class="sub-due">Renews 14 Apr</div></div></div>
+        <div class="sub-item"><div class="sub-icon" style="background:var(--lime-soft)">▲</div><div class="sub-info"><div class="sub-name">Vercel Pro</div><div class="sub-cycle">Monthly · Hosting</div></div><div><div class="sub-price">$20</div><div class="sub-due">Renews 1 May</div></div></div>
+        <div class="sub-item"><div class="sub-icon" style="background:var(--success-soft)">📧</div><div class="sub-info"><div class="sub-name">Google Workspace</div><div class="sub-cycle">Monthly · Castmates</div></div><div><div class="sub-price">$10.80</div><div class="sub-due">Renews 3 May</div></div></div>
+        <div class="sub-item"><div class="sub-icon" style="background:var(--sky-soft)">⚡</div><div class="sub-info"><div class="sub-name">Supabase Pro</div><div class="sub-cycle">Monthly · Database</div></div><div><div class="sub-price">$25</div><div class="sub-due">Renews 5 May</div></div></div>
+        <div class="sub-item"><div class="sub-icon" style="background:var(--rose-soft)">📱</div><div class="sub-info"><div class="sub-name">Apple One (Duo)</div><div class="sub-cycle">Monthly · iCloud + TV</div></div><div><div class="sub-price">$22.95</div><div class="sub-due">Renews 10 Apr</div></div></div>
+        <div class="sub-item"><div class="sub-icon" style="background:var(--amber-soft)">🎬</div><div class="sub-info"><div class="sub-name">Stan</div><div class="sub-cycle">Monthly · Streaming</div></div><div><div class="sub-price">$16</div><div class="sub-due">Renews 22 Apr</div></div></div>
+        <div class="sub-item"><div class="sub-icon" style="background:var(--warm)">💪</div><div class="sub-info"><div class="sub-name">Gym membership</div><div class="sub-cycle">Fortnightly · Fitness</div></div><div><div class="sub-price">$39.90</div><div class="sub-due">Debits 11 Apr</div></div></div>
+        <div class="sub-item"><div class="sub-icon" style="background:var(--sky-soft)">🔧</div><div class="sub-info"><div class="sub-name">GitHub Pro</div><div class="sub-cycle">Monthly · Dev</div></div><div><div class="sub-price">$7</div><div class="sub-due">Renews 15 Apr</div></div></div>
+        <div class="sub-item"><div class="sub-icon" style="background:var(--lime-soft)">📤</div><div class="sub-info"><div class="sub-name">Resend</div><div class="sub-cycle">Monthly · Email API</div></div><div><div class="sub-price">$20</div><div class="sub-due">Renews 1 May</div></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><span class="card-title">Spending Categories</span><span class="card-badge badge-sky">April</span></div>
+      <div class="big-number">$1,247</div>
+      <div class="big-number-sub">Discretionary · 2 days in</div>
+      <div class="spending-bars">
+        <div class="spend-row"><span class="spend-cat">Food & Dining</span><div class="spend-track"><div class="spend-fill" style="width:62%; background:linear-gradient(90deg, #CBFF4D, #A8D5F2)"></div></div><span class="spend-amt">$520</span></div>
+        <div class="spend-row"><span class="spend-cat">Transport</span><div class="spend-track"><div class="spend-fill" style="width:35%; background:linear-gradient(90deg, #A8D5F2, #7BB8E0)"></div></div><span class="spend-amt">$294</span></div>
+        <div class="spend-row"><span class="spend-cat">Shopping</span><div class="spend-track"><div class="spend-fill" style="width:28%; background:linear-gradient(90deg, #E8FFB0, #CBFF4D)"></div></div><span class="spend-amt">$233</span></div>
+        <div class="spend-row"><span class="spend-cat">Health</span><div class="spend-track"><div class="spend-fill" style="width:15%; background:linear-gradient(90deg, #F5F0E8, #B8860B)"></div></div><span class="spend-amt">$120</span></div>
+        <div class="spend-row"><span class="spend-cat">Entertainment</span><div class="spend-track"><div class="spend-fill" style="width:10%; background:linear-gradient(90deg, #FCE8EF, #C9547A)"></div></div><span class="spend-amt">$80</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TRAVEL ==================== -->
+<div class="tab-page" id="tab-travel">
+  <div class="stat-row">
+    <div class="stat-card">
+      <div class="stat-label">Days Until Departure</div>
+      <div class="stat-value" style="color:var(--lime-text)">23</div>
+      <div class="stat-sub">Brisbane → Osaka · 25 April</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Budget</div>
+      <div class="stat-value">$8,500</div>
+      <div class="stat-sub">For 2 people · 34 days</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Spent So Far</div>
+      <div class="stat-value">$3,940</div>
+      <div class="stat-sub">Flights $1,840 + Accom $2,100</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Daily Budget Left</div>
+      <div class="stat-value" style="color:var(--lime-text)">$134</div>
+      <div class="stat-sub">$4,560 remaining ÷ 34 days</div>
+    </div>
+  </div>
+
+  <div class="travel-page-grid">
+    <div class="card">
+      <div class="card-header"><span class="card-title">Itinerary</span><span class="card-badge badge-lime">5 cities</span></div>
+      <div class="city-card">
+        <div class="city-header"><span class="city-emoji">🏯</span><div><div class="city-name">Osaka</div><div class="city-dates">25 Apr – 2 May · 7 nights</div></div></div>
+        <div class="city-detail">Street food in Dotonbori, Osaka Castle, day trip to Nara. Budget hostel/Airbnb booked.</div>
+        <div class="city-budget">~$85/day</div>
+      </div>
+      <div class="city-card">
+        <div class="city-header"><span class="city-emoji">🗼</span><div><div class="city-name">Tokyo</div><div class="city-dates">2 – 10 May · 8 nights</div></div></div>
+        <div class="city-detail">Shibuya, Shinjuku, Akihabara, Tsukiji Outer Market, TeamLab. Hostel booked in Asakusa.</div>
+        <div class="city-budget">~$95/day</div>
+      </div>
+      <div class="city-card">
+        <div class="city-header"><span class="city-emoji">🌿</span><div><div class="city-name">Hanoi</div><div class="city-dates">11 – 17 May · 6 nights</div></div></div>
+        <div class="city-detail">Old Quarter, Hoan Kiem Lake, street food tour, Ha Long Bay day trip. Hotel booked.</div>
+        <div class="city-budget">~$55/day</div>
+      </div>
+      <div class="city-card">
+        <div class="city-header"><span class="city-emoji">🏮</span><div><div class="city-name">Hoi An</div><div class="city-dates">17 – 22 May · 5 nights</div></div></div>
+        <div class="city-detail">Tailor shopping, lantern town, Cua Dai Beach. Prescription glasses + sunglasses here. Homestay booked.</div>
+        <div class="city-budget">~$50/day</div>
+      </div>
+      <div class="city-card">
+        <div class="city-header"><span class="city-emoji">🌴</span><div><div class="city-name">Ho Chi Minh City</div><div class="city-dates">22 – 28 May · 6 nights</div></div></div>
+        <div class="city-detail">Cu Chi Tunnels, Ben Thanh Market, rooftop bars, Mekong Delta. Fly home 28 May.</div>
+        <div class="city-budget">~$60/day</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-header"><span class="card-title">Pre-Trip Checklist</span><span class="card-badge badge-warm">5 of 12 done</span></div>
+        <div class="checklist">
+          <div class="check-item done"><div class="check-box">✓</div>Book flights (Jetstar BNE→KIX, internal)</div>
+          <div class="check-item done"><div class="check-box">✓</div>Book Osaka accommodation</div>
+          <div class="check-item done"><div class="check-box">✓</div>Book Tokyo hostel (Asakusa)</div>
+          <div class="check-item done"><div class="check-box">✓</div>Travel insurance (CoverMore)</div>
+          <div class="check-item done"><div class="check-box">✓</div>Japan Rail Pass — 7-day</div>
+          <div class="check-item"><div class="check-box"></div>Book Vietnam accommodation</div>
+          <div class="check-item"><div class="check-box"></div>Eye test + buy contact lenses in bulk</div>
+          <div class="check-item"><div class="check-box"></div>Vietnam e-visa application</div>
+          <div class="check-item"><div class="check-box"></div>Pocket wifi / eSIM (Airalo)</div>
+          <div class="check-item"><div class="check-box"></div>Notify bank of travel dates</div>
+          <div class="check-item"><div class="check-box"></div>Pack — carry-on only challenge</div>
+          <div class="check-item"><div class="check-box"></div>Set up Wise card for AUD→JPY/VND</div>
+        </div>
+      </div>
+
+      <div class="card insights-card">
+        <div class="card-header"><span class="card-title">💡 Travel Tips</span></div>
+        <div class="insight-item">Prescription glasses in Hoi An cost <strong>$30–60 AUD</strong> vs $300+ in Australia. Get your script before you leave.</div>
+        <div class="insight-item">Wise card gives you the <strong>mid-market exchange rate</strong> — much better than airport exchanges. Set up now.</div>
+        <div class="insight-item">Contacts in bulk from <strong>OPSM or Specsavers</strong> before the trip — you'll need 34 days worth of dailies (~$60).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== CALENDAR ==================== -->
+<div class="tab-page" id="tab-calendar">
+  <div class="calendar-page-grid">
+    <div class="card cal-large">
+      <div class="card-header"><span class="card-title">April 2026</span></div>
+      <div class="cal-month-nav">
+        <button class="cal-nav-btn">‹</button>
+        <span class="cal-month">April 2026</span>
+        <button class="cal-nav-btn">›</button>
+      </div>
+      <div class="cal-grid">
+        <div class="cal-day-header">Mon</div><div class="cal-day-header">Tue</div><div class="cal-day-header">Wed</div><div class="cal-day-header">Thu</div><div class="cal-day-header">Fri</div><div class="cal-day-header">Sat</div><div class="cal-day-header">Sun</div>
+        <div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day has-event">1</div><div class="cal-day today">2</div><div class="cal-day">3</div><div class="cal-day">4</div><div class="cal-day">5</div>
+        <div class="cal-day">6</div><div class="cal-day has-event">7</div><div class="cal-day">8</div><div class="cal-day has-event">9</div><div class="cal-day has-event">10</div><div class="cal-day">11</div><div class="cal-day">12</div>
+        <div class="cal-day">13</div><div class="cal-day">14</div><div class="cal-day has-event">15</div><div class="cal-day">16</div><div class="cal-day">17</div><div class="cal-day has-event">18</div><div class="cal-day">19</div>
+        <div class="cal-day">20</div><div class="cal-day">21</div><div class="cal-day has-event">22</div><div class="cal-day">23</div><div class="cal-day">24</div><div class="cal-day travel-day">25</div><div class="cal-day travel-day">26</div>
+        <div class="cal-day travel-day">27</div><div class="cal-day travel-day">28</div><div class="cal-day travel-day">29</div><div class="cal-day travel-day">30</div><div class="cal-day empty"></div><div class="cal-day empty"></div><div class="cal-day empty"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card" style="margin-bottom: 18px;">
+        <div class="card-header"><span class="card-title">Upcoming Events</span><span class="card-badge badge-sky">12 events</span></div>
+        <div class="event-list">
+          <div class="event-card">
+            <div class="event-card-date">Wed 1 April</div>
+            <div class="event-card-title">Eye test — new prescription</div>
+            <div class="event-card-desc">Get updated script for contacts & glasses before Japan. Ask about alternatives to Clariti 1 Day Toric.</div>
+            <span class="event-card-tag" style="background:var(--success-soft); color:var(--success)">Health</span>
+          </div>
+          <div class="event-card">
+            <div class="event-card-date">Mon 7 April</div>
+            <div class="event-card-title">Rent due — $1,950</div>
+            <div class="event-card-desc">Auto-transfer set up. Check account balance day before.</div>
+            <span class="event-card-tag" style="background:var(--sky-soft); color:var(--sky-dark)">Finance</span>
+          </div>
+          <div class="event-card">
+            <div class="event-card-date">Thu 9 April</div>
+            <div class="event-card-title">Hamilton — evening show</div>
+            <div class="event-card-desc">Call time 6pm. Wear contacts.</div>
+            <span class="event-card-tag" style="background:var(--lime-soft); color:var(--lime-text)">Performance</span>
+          </div>
+          <div class="event-card">
+            <div class="event-card-date">Fri 10 April</div>
+            <div class="event-card-title">Hamilton — matinee + evening</div>
+            <div class="event-card-desc">Double show day. Pack food.</div>
+            <span class="event-card-tag" style="background:var(--lime-soft); color:var(--lime-text)">Performance</span>
+          </div>
+          <div class="event-card">
+            <div class="event-card-date">Tue 15 April</div>
+            <div class="event-card-title">Scout demo — Remy @ BGM</div>
+            <div class="event-card-desc">Show the Hivemind onboarding flow, brief parsing, and roster matching. Key validation call for Scout B2B pivot.</div>
+            <span class="event-card-tag" style="background:var(--rose-soft); color:var(--rose)">Castmates</span>
+          </div>
+          <div class="event-card">
+            <div class="event-card-date">Sat 18 April</div>
+            <div class="event-card-title">Buy contacts in bulk</div>
+            <div class="event-card-desc">Order 2 boxes (90-pack) of dailies from Specsavers or OPSM with new script. Need 34+ days for Japan/Vietnam.</div>
+            <span class="event-card-tag" style="background:var(--success-soft); color:var(--success)">Health</span>
+          </div>
+          <div class="event-card">
+            <div class="event-card-date">Wed 22 April</div>
+            <div class="event-card-title">Final trip prep</div>
+            <div class="event-card-desc">Pack bags (carry-on only), activate Wise card, download offline maps, confirm all bookings.</div>
+            <span class="event-card-tag" style="background:var(--amber-soft); color:var(--amber)">Travel</span>
+          </div>
+          <div class="event-card">
+            <div class="event-card-date">Fri 25 April</div>
+            <div class="event-card-title">✈ Fly Brisbane → Osaka</div>
+            <div class="event-card-desc">Jetstar. Depart BNE early morning. Arrive KIX evening (Japan time). Transfer to accommodation.</div>
+            <span class="event-card-tag" style="background:var(--amber-soft); color:var(--amber)">Travel</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== TASKS ==================== -->
+<div class="tab-page" id="tab-tasks">
+  <div class="tasks-layout">
+    <div>
+      <div class="card">
+        <div class="card-header"><span class="card-title">Categories</span></div>
+        <div class="task-categories" id="catList"></div>
+      </div>
+    </div>
+    <div>
+      <div class="task-add-bar">
+        <input type="text" class="task-input" id="taskInput" placeholder="Add a new task..." onkeydown="if(event.key==='Enter')addTask()">
+        <select class="cat-select" id="taskCatSelect"></select>
+        <button class="btn btn-primary" onclick="addTask()">Add</button>
+      </div>
+      <div class="task-progress" id="taskProgress"></div>
+      <div class="task-list" id="taskList"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('tab-' + tabName).classList.add('active');
+  const btns = document.querySelectorAll('.nav-btn');
+  const tabMap = { overview: 0, finances: 1, travel: 2, calendar: 3, tasks: 4 };
+  btns[tabMap[tabName]].classList.add('active');
+  const cards = document.getElementById('tab-' + tabName).querySelectorAll('.card, .stat-card');
+  cards.forEach((card, i) => {
+    card.style.animation = 'none';
+    card.offsetHeight;
+    card.style.animation = `fadeUp 0.5s cubic-bezier(0.16,1,0.3,1) ${i * 0.06}s both`;
+  });
+}
+
+// Drag and drop
+const uploadZone = document.getElementById('uploadZone');
+uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', e => {
+  e.preventDefault();
+  uploadZone.classList.remove('dragover');
+  const file = e.dataTransfer.files[0];
+  if (file && file.name.endsWith('.csv')) processFile(file);
+});
+
+function handleFileSelect(e) {
+  const file = e.target.files[0];
+  if (file) processFile(file);
+}
+
+function processFile(file) {
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const csv = e.target.result;
+    uploadZone.classList.add('has-file');
+    document.getElementById('uploadContent').innerHTML =
+      '<div class="upload-icon">✅</div>' +
+      '<div class="upload-title">' + file.name + '</div>' +
+      '<div class="upload-sub">' + (file.size / 1024).toFixed(1) + ' KB · Uploaded successfully</div>';
+    analyzeCSV(csv, file.name);
+  };
+  reader.readAsText(file);
+}
+
+function resetUpload() {
+  uploadZone.classList.remove('has-file');
+  document.getElementById('uploadContent').innerHTML =
+    '<div class="upload-icon">📄</div>' +
+    '<div class="upload-title">Drop your bank statement CSV here</div>' +
+    '<div class="upload-sub">or click to browse · Works with CommBank, NAB, ANZ, Westpac, Up, ING & more</div>';
+  document.getElementById('csvInput').value = '';
+  document.getElementById('aiPanel').classList.remove('visible');
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split('\n');
+  if (lines.length < 2) return { headers: [], rows: [], raw: text };
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+  const rows = [];
+  for (let i = 1; i < lines.length; i++) {
+    const values = []; let current = ''; let inQ = false;
+    for (const c of lines[i]) {
+      if (c === '"') inQ = !inQ;
+      else if (c === ',' && !inQ) { values.push(current.trim()); current = ''; }
+      else current += c;
+    }
+    values.push(current.trim());
+    if (values.length >= 2) rows.push(values);
+  }
+  return { headers, rows, raw: text };
+}
+
+function quickStats(parsed) {
+  const { headers, rows } = parsed;
+  const amtIdx = headers.findIndex(h => /amount|debit|credit|value|money/i.test(h));
+  const debIdx = headers.findIndex(h => /debit/i.test(h));
+  const credIdx = headers.findIndex(h => /credit/i.test(h));
+  let totalIn = 0, totalOut = 0;
+  rows.forEach(row => {
+    if (debIdx >= 0 && credIdx >= 0) {
+      totalOut += Math.abs(parseFloat((row[debIdx]||'0').replace(/[^0-9.\-]/g,''))||0);
+      totalIn += Math.abs(parseFloat((row[credIdx]||'0').replace(/[^0-9.\-]/g,''))||0);
+    } else if (amtIdx >= 0) {
+      const a = parseFloat((row[amtIdx]||'0').replace(/[^0-9.\-]/g,''))||0;
+      if (a < 0) totalOut += Math.abs(a); else totalIn += a;
+    }
+  });
+  return { totalIn, totalOut, txnCount: rows.length, net: totalIn - totalOut };
+}
+
+function fmt(n) { return Math.abs(n).toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+async function analyzeCSV(csvText, filename) {
+  const panel = document.getElementById('aiPanel');
+  const loading = document.getElementById('aiLoading');
+  const statsEl = document.getElementById('aiStats');
+  const contentEl = document.getElementById('aiContent');
+
+  panel.classList.add('visible');
+  loading.style.display = 'flex';
+  statsEl.style.display = 'none';
+  contentEl.style.display = 'none';
+
+  const parsed = parseCSV(csvText);
+  const s = quickStats(parsed);
+
+  statsEl.innerHTML =
+    '<div class="ai-txn-stat"><div class="ai-txn-stat-value">' + s.txnCount + '</div><div class="ai-txn-stat-label">Transactions</div></div>' +
+    '<div class="ai-txn-stat"><div class="ai-txn-stat-value" style="color:var(--success)">$' + fmt(s.totalIn) + '</div><div class="ai-txn-stat-label">Money In</div></div>' +
+    '<div class="ai-txn-stat"><div class="ai-txn-stat-value" style="color:var(--rose)">$' + fmt(s.totalOut) + '</div><div class="ai-txn-stat-label">Money Out</div></div>' +
+    '<div class="ai-txn-stat"><div class="ai-txn-stat-value" style="color:' + (s.net>=0?'var(--lime-text)':'var(--rose)') + '">$' + fmt(s.net) + '</div><div class="ai-txn-stat-label">' + (s.net>=0?'Net Positive':'Net Negative') + '</div></div>';
+  statsEl.style.display = 'grid';
+
+  const lines = csvText.trim().split('\n');
+  const truncated = lines.length > 201 ? lines.slice(0,201).join('\n') + '\n... (' + (lines.length-201) + ' more rows)' : csvText;
+
+  try {
+    const resp = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        messages: [{
+          role: "user",
+          content: "You are a personal finance advisor analysing an Australian bank statement CSV. The user is a performing artist and startup co-founder saving for their first home ($80k deposit target, currently at $29,600). They are about to travel to Japan and Vietnam for 34 days.\n\nHere is their bank statement CSV (filename: " + filename + "):\n\n" + truncated + "\n\nAnalyse this statement and give practical advice. Structure your response in HTML (not markdown) using these tags only: <h3>, <p>, <strong>, <ul>, <li>. Keep it concise and direct. Cover:\n\n1. Spending breakdown — categorise their transactions (food, transport, subscriptions, entertainment, bills, transfers, etc.) and give totals for each\n2. Red flags — any unusual charges, duplicate payments, subscriptions they might not need, or spending patterns to optimise\n3. Savings impact — based on this statement period, are they on track for their $80k deposit goal? What could they cut to save faster?\n4. Travel prep — any spending that suggests they should adjust before their 34-day trip?\n5. One key recommendation — the single highest-impact change they could make\n\nUse Australian dollars. Be direct, not preachy. Talk like a smart friend who is good with money."
+        }]
+      })
+    });
+
+    const data = await resp.json();
+    loading.style.display = 'none';
+
+    if (data.content && data.content.length > 0) {
+      contentEl.innerHTML = data.content.map(b => b.text || '').join('');
+    } else if (data.error) {
+      contentEl.innerHTML = '<h3>Could not analyse</h3><p>' + (data.error.message || 'Unknown error from API') + '</p>' +
+        '<p>Quick stats from your CSV: <strong>' + s.txnCount + ' transactions</strong>, <strong>$' + fmt(s.totalIn) + ' in</strong>, <strong>$' + fmt(s.totalOut) + ' out</strong>.</p>';
+    } else {
+      contentEl.innerHTML = '<p>Unexpected response. Try uploading again.</p>';
+    }
+    contentEl.style.display = 'block';
+  } catch (err) {
+    loading.style.display = 'none';
+    contentEl.innerHTML = '<h3>Offline analysis</h3>' +
+      '<p>Could not reach Claude for a detailed breakdown, but here is what I can see from parsing your CSV locally:</p>' +
+      '<p>Your statement has <strong>' + s.txnCount + ' transactions</strong> with <strong>$' + fmt(s.totalIn) + ' coming in</strong> and <strong>$' + fmt(s.totalOut) + ' going out</strong>.</p>' +
+      '<p>Net position: <strong>$' + fmt(s.net) + '</strong>. ' + (s.net >= 0 ? 'You are in positive territory this period.' : 'You spent more than you earned this period — worth reviewing.') + '</p>' +
+      '<p>For a full AI-powered breakdown, try uploading your CSV directly into a Claude conversation.</p>';
+    contentEl.style.display = 'block';
+  }
+}
+
+// ============ TASKS ============
+const CATEGORIES = [
+  { id: 'all', name: 'All Tasks', color: 'var(--ink)', bg: 'var(--bg)' },
+  { id: 'personal', name: 'Personal', color: '#3D8B37', bg: 'var(--success-soft)' },
+  { id: 'castmates', name: 'Castmates', color: '#C9547A', bg: 'var(--rose-soft)' },
+  { id: 'travel', name: 'Travel', color: '#B8860B', bg: 'var(--amber-soft)' },
+  { id: 'finance', name: 'Finance', color: '#2A6A9E', bg: 'var(--sky-soft)' },
+  { id: 'health', name: 'Health', color: '#3D5A00', bg: 'var(--lime-soft)' },
+  { id: 'home', name: 'Home', color: '#7c5cbf', bg: '#f0ebf8' },
+];
+
+let tasks = [
+  { id: 1, text: 'Book Vietnam accommodation (Hanoi, Hoi An, HCMC)', cat: 'travel', done: false },
+  { id: 2, text: 'Apply for Vietnam e-visa', cat: 'travel', done: false },
+  { id: 3, text: 'Set up Wise card for JPY/VND', cat: 'finance', done: false },
+  { id: 4, text: 'Buy contact lenses in bulk (34+ days)', cat: 'health', done: false },
+  { id: 5, text: 'Get eye test — new prescription', cat: 'health', done: true },
+  { id: 6, text: 'Scout demo prep for Remy @ BGM', cat: 'castmates', done: false },
+  { id: 7, text: 'Fix RLS on studio_accounts table', cat: 'castmates', done: false },
+  { id: 8, text: 'Build Stripe refund flow for Marketplace', cat: 'castmates', done: false },
+  { id: 9, text: 'Audit subscriptions — cut what you don\'t use', cat: 'finance', done: false },
+  { id: 10, text: 'Notify bank of Japan/Vietnam travel dates', cat: 'finance', done: false },
+  { id: 11, text: 'Buy pocket wifi or Airalo eSIM', cat: 'travel', done: false },
+  { id: 12, text: 'Pack — carry-on only challenge', cat: 'travel', done: false },
+  { id: 13, text: 'Research first home buyer grants QLD', cat: 'home', done: false },
+  { id: 14, text: 'Book flights (Jetstar BNE→KIX)', cat: 'travel', done: true },
+  { id: 15, text: 'Get travel insurance (CoverMore)', cat: 'travel', done: true },
+];
+
+let activeCategory = 'all';
+let nextId = 16;
+
+function getCat(id) { return CATEGORIES.find(c => c.id === id) || CATEGORIES[0]; }
+
+function getFilteredTasks() {
+  if (activeCategory === 'all') return tasks;
+  return tasks.filter(t => t.cat === activeCategory);
+}
+
+function renderCategories() {
+  const el = document.getElementById('catList');
+  el.innerHTML = CATEGORIES.map(cat => {
+    const count = cat.id === 'all' ? tasks.length : tasks.filter(t => t.cat === cat.id).length;
+    if (cat.id !== 'all' && count === 0 && cat.id !== activeCategory) return '';
+    return '<button class="cat-btn ' + (activeCategory === cat.id ? 'active' : '') + '" onclick="setCategory(\'' + cat.id + '\')">' +
+      (cat.id !== 'all' ? '<span class="cat-dot" style="background:' + cat.color + '"></span>' : '') +
+      cat.name +
+      '<span class="cat-count">' + count + '</span></button>';
+  }).join('');
+}
+
+function renderTasks() {
+  const filtered = getFilteredTasks();
+  const el = document.getElementById('taskList');
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="task-empty"><div class="task-empty-icon">✨</div>No tasks here yet. Add one above!</div>';
+  } else {
+    // Sort: incomplete first, then completed
+    const sorted = [...filtered].sort((a, b) => a.done - b.done);
+    el.innerHTML = sorted.map(t => {
+      const cat = getCat(t.cat);
+      return '<div class="task-item ' + (t.done ? 'completed' : '') + '" data-id="' + t.id + '">' +
+        '<button class="task-check" onclick="toggleTask(' + t.id + ')">' + (t.done ? '✓' : '') + '</button>' +
+        '<span class="task-text">' + t.text + '</span>' +
+        '<span class="task-cat-tag" style="background:' + cat.bg + '; color:' + cat.color + '">' + cat.name + '</span>' +
+        '<button class="task-delete" onclick="deleteTask(' + t.id + ')">×</button>' +
+        '</div>';
+    }).join('');
+  }
+
+  renderProgress();
+  renderCategories();
+  renderCatSelect();
+}
+
+function renderProgress() {
+  const filtered = getFilteredTasks();
+  const total = filtered.length;
+  const done = filtered.filter(t => t.done).length;
+  const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+  const el = document.getElementById('taskProgress');
+  el.innerHTML = '<div class="task-progress-text">' + done + ' of ' + total + ' tasks completed · ' + pct + '%</div>' +
+    '<div class="task-progress-bar"><div class="task-progress-fill" style="width:' + pct + '%"></div></div>';
+}
+
+function renderCatSelect() {
+  const el = document.getElementById('taskCatSelect');
+  const current = el.value || 'personal';
+  el.innerHTML = CATEGORIES.filter(c => c.id !== 'all').map(c =>
+    '<option value="' + c.id + '"' + (c.id === current ? ' selected' : '') + '>' + c.name + '</option>'
+  ).join('');
+}
+
+function setCategory(catId) {
+  activeCategory = catId;
+  renderTasks();
+}
+
+function addTask() {
+  const input = document.getElementById('taskInput');
+  const text = input.value.trim();
+  if (!text) return;
+  const cat = document.getElementById('taskCatSelect').value;
+  tasks.push({ id: nextId++, text, cat, done: false });
+  input.value = '';
+  renderTasks();
+}
+
+function toggleTask(id) {
+  const task = tasks.find(t => t.id === id);
+  if (task) { task.done = !task.done; renderTasks(); }
+}
+
+function deleteTask(id) {
+  tasks = tasks.filter(t => t.id !== id);
+  renderTasks();
+}
+
+// Init tasks on load
+renderTasks();
+</script>
+
+</body>
+</html>
